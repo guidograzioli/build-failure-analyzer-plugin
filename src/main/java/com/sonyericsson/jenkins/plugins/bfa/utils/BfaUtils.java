@@ -28,7 +28,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl;
+
+import hudson.markup.EscapedMarkupFormatter;
 import jenkins.model.Jenkins;
 
 /**
@@ -67,4 +73,36 @@ public final class BfaUtils {
         return name;
     }
 
+    /**
+     * Performs regex replacement of autolinks in cause description.
+     *
+     * The replacement is disabled when the formatter is not the default EscapedMarkupFormatter.
+     * @param description the cause description to process
+     * @return the processed description
+     */
+    public static String processAutolinks(String description) {
+        try {
+            if (Jenkins.getInstance().getMarkupFormatter() instanceof EscapedMarkupFormatter) {
+                 String translated = Jenkins.getInstance().getMarkupFormatter().translate(description);
+                 Pattern p = Pattern.compile(PluginImpl.getInstance().getAutolinkRegex(), Pattern.DOTALL);
+                 Matcher m = p.matcher(translated);
+                 if (m.matches()) {
+                     String linkedText = m.group();
+                     if (m.groupCount() > 0) {
+                         linkedText = "$1";
+                     }
+                     return translated.replaceAll(PluginImpl.getInstance().getAutolinkRegex(),
+                         String.format("<a target='_blank' href='%s'>%s</a>",
+                             PluginImpl.getInstance().getAutolinkUrl(), linkedText));
+                 }
+            } else {
+                    return Jenkins.getInstance().getMarkupFormatter().translate(description);
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Couldn't transform markup.");
+        } catch (PatternSyntaxException pse) {
+            logger.log(Level.WARNING, "Couldn't parge autolink regular expression.");
+        }
+        return description;
+    }
 }

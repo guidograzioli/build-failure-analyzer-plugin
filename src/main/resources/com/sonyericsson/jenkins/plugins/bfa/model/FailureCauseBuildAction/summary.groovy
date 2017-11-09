@@ -24,6 +24,7 @@
 
 package com.sonyericsson.jenkins.plugins.bfa.model.FailureCauseBuildAction
 import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
+import com.sonyericsson.jenkins.plugins.bfa.utils.BfaUtils
 
 def f = namespace(lib.FormTagLib)
 def j = namespace(lib.JenkinsTagLib)
@@ -114,7 +115,7 @@ def displayCauses(cause, indent, links) {
                 br {}
                 br {}
                 b(style: "font-weight: normal") {
-                    raw(app.markupFormatter.translate(cause.description))
+					raw(BfaUtils.processAutolinks(cause.description))
                 }
                 br {}
                 cause.getIndications().each { indication ->

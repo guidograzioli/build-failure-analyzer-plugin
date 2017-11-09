@@ -146,6 +146,33 @@ public class PluginImplHudsonTest {
     }
 
     /**
+     * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}.
+     * with the same KnowledgeBase as before. And nrOfScanThreads set/"hacked" to -1
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testConfigureAutolink() throws Exception {
+        KnowledgeBase prevKnowledgeBase = PluginImpl.getInstance().getKnowledgeBase();
+        String expectedNoCauseMessage = "I am blinded!";
+        String expectedAutolinkRegex = "^([A-Z]+-[0-9]+\\s*)(.*)$";
+        String expectedAutolinkUrl = "https://jira.atlassian.net/";
+        StaplerRequest sreq = mock(StaplerRequest.class);
+        LocalFileKnowledgeBase knowledgeBase = new LocalFileKnowledgeBase();
+        when(sreq.bindJSON(eq(KnowledgeBase.class), isA(JSONObject.class))).thenReturn(knowledgeBase);
+
+        JSONObject form = createForm(expectedNoCauseMessage, PluginImpl.DEFAULT_NR_OF_SCAN_THREADS, null);
+        form.put("autolinkRegex", expectedAutolinkRegex);
+        form.put("autolinkUrl", expectedAutolinkUrl);
+
+        PluginImpl.getInstance().configure(sreq, form);
+
+        assertSame(prevKnowledgeBase, PluginImpl.getInstance().getKnowledgeBase());
+        assertEquals(expectedAutolinkRegex, PluginImpl.getInstance().getAutolinkRegex());
+        assertEquals(expectedAutolinkUrl, PluginImpl.getInstance().getAutolinkUrl());
+    }
+
+    /**
      * Tests {@link PluginImpl#configure(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)}. with a new
      * KnowledgeBase type.
      *
@@ -262,6 +289,9 @@ public class PluginImplHudsonTest {
         form.put("testResultCategories", "foo bar");
         form.put("knowledgeBase", new JSONObject());
         form.put("nrOfScanThreads", nrOfScanThreads);
+        form.put("autolinkRegex", "");
+        form.put("autolinkUrl", "");
+        form.put("noCausesMessage", expectedNoCauseMessage);
         form.put("maximumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MAXIMUM_SOD_WORKER_THREADS);
         form.put("minimumNumberOfWorkerThreads", ScanOnDemandVariables.DEFAULT_MINIMUM_SOD_WORKER_THREADS);
         form.put("threadKeepAliveTime", ScanOnDemandVariables.DEFAULT_SOD_THREADS_KEEP_ALIVE_TIME);

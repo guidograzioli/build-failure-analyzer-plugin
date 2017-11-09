@@ -393,6 +393,47 @@ public class BuildFailureScannerHudsonTest {
         assertNotNull(action);
     }
 
+    /**
+     * Happy test that verifies regex autolinks are matched in the indications description.
+     *
+     * @throws Exception if so.
+     */
+    @Test
+    public void testIndicationFoundWithAutolinkRegexMatch() throws Exception {
+        PluginImpl.getInstance().setAutolinkRegex("(?s)jira:([A-Z]+-[0-9]+)");
+        PluginImpl.getInstance().setAutolinkUrl("https://jira.atlassian.com/browse/$1");
+        String inputDescription = "...${1,1} as in jira:JIRA-101 description...";
+        String formattedDescription = "...brief as in jira:JIRA-101 description...";
+        String expectedDescription = "...brief as in JIRA-101 description...";
+        String expectedUrl = "https://jira.atlassian.com/browse/JIRA-101'";
+        FreeStyleProject project = createProject();
+
+        FailureCause failureCause = configureCauseAndIndication("Err", inputDescription, new BuildLogIndication(REGEX));
+
+        Future<FreeStyleBuild> future = project.scheduleBuild2(0, new Cause.UserIdCause());
+
+        FreeStyleBuild build = future.get(10, TimeUnit.SECONDS);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+
+        FailureCauseBuildAction action = build.getAction(FailureCauseBuildAction.class);
+        assertNotNull(action);
+        List<FoundFailureCause> causeListFromAction = action.getFoundFailureCauses();
+        assertTrue(findCauseInList(causeListFromAction, failureCause));
+
+        HtmlPage page = jenkins.createWebClient().goTo(build.getUrl());
+        HtmlElement document = page.getDocumentElement();
+
+        FoundFailureCause foundFailureCause = causeListFromAction.get(0);
+        // autolinking should be render only, leaving FoundFailureCauses untouched
+        assertEquals(formattedDescription, foundFailureCause.getDescription());
+
+        HtmlElement renderedDescription = document.getFirstByXPath("//h2[text()='Identified problems']/../../..//h3/b");
+        assertEquals(expectedDescription, renderedDescription.asText());
+        List<HtmlElement> autolinkElements = renderedDescription.getHtmlElementsByTagName("a");
+        assertTrue(!autolinkElements.isEmpty());
+        assertEquals(expectedUrl, autolinkElements.get(0).getAttribute("href"));
+    }
+
 
     /**
      * Create a string with any length than contains only 'a' letters

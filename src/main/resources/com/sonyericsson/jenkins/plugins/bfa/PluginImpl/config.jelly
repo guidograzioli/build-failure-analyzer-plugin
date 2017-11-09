@@ -121,5 +121,15 @@
                        value="${it.maxLogSize}"
                        default="${it.DEFAULT_MAX_LOG_SIZE}"/>
         </f:entry>
+        <f:section title="${%Failure cause description autolinks}">
+            <f:entry title="${%Match regex}"
+                     description="${%Regular expression to match in cause description}">
+                <f:textbox name="autolinkRegex" value="${it.autolinkRegex}"/>
+            </f:entry>
+            <f:entry title="${%Destination URL}"
+                description="${%URL to link for the text matched by the regular expression above}">
+                <f:textbox name="autolinkUrl" value="${it.autolinkUrl}"/>
+            </f:entry>
+        </f:section>
     </f:advanced>
 </j:jelly>

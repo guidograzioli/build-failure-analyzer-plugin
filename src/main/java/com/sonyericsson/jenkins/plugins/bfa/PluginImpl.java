@@ -139,6 +139,9 @@ public class PluginImpl extends Plugin {
     private Boolean testResultParsingEnabled;
     private String testResultCategories;
 
+    private String autolinkRegex;
+    private String autolinkUrl;
+
     /**
      * ScanOnDemandVariable instance.
      */
@@ -158,7 +161,13 @@ public class PluginImpl extends Plugin {
         if (nrOfScanThreads < 1) {
             nrOfScanThreads = DEFAULT_NR_OF_SCAN_THREADS;
         }
-        sodVariables = new ScanOnDemandVariables();
+        if (autolinkRegex == null) {
+            autolinkRegex = "";
+        }
+        if (autolinkUrl == null) {
+            autolinkUrl = "";
+        }
+         sodVariables = new ScanOnDemandVariables();
         if (sodVariables.getMinimumSodWorkerThreads() < 1) {
             sodVariables.setMinimumSodWorkerThreads(ScanOnDemandVariables.
                     DEFAULT_MINIMUM_SOD_WORKER_THREADS);
@@ -324,6 +333,24 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Getter for the autolink regex.
+     *
+     * @return the regex.
+     */
+    public String getAutolinkRegex() {
+        return autolinkRegex;
+    }
+
+    /**
+     * Getter for the autolink url.
+     *
+     * @return the url.
+     */
+    public String getAutolinkUrl() {
+        return autolinkUrl;
+    }
+
+    /**
      * If this feature is enabled or not. When on all unsuccessful builds will be scanned. None when off.
      *
      * @return true if on.
@@ -466,6 +493,24 @@ public class PluginImpl extends Plugin {
     }
 
     /**
+     * Setter for the autolink regex.
+     *
+     * @param autolinkRegex the regex.
+     */
+    public void setAutolinkRegex(String autolinkRegex) {
+        this.autolinkRegex = autolinkRegex;
+    }
+
+    /**
+     * Setter for the autolink url.
+     *
+     * @param autolinkUrl the url.
+     */
+    public void setAutolinkUrl(String autolinkUrl) {
+        this.autolinkUrl = autolinkUrl;
+    }
+
+    /**
      * Set the maximum log size that should be scanned.
      *
      * @param maxLogSize value
@@ -599,6 +644,9 @@ public class PluginImpl extends Plugin {
         if (maxLogSize < 0) {
             maxLogSize = DEFAULT_MAX_LOG_SIZE;
         }
+
+        autolinkUrl = o.getString("autolinkUrl");
+        autolinkRegex = o.getString("autolinkRegex");
 
         if (corePoolNumberOfThreads < ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS) {
             sodVariables.setSodCorePoolNumberOfThreads(ScanOnDemandVariables.DEFAULT_SOD_COREPOOL_THREADS);
